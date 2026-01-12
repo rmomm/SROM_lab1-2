@@ -5,13 +5,15 @@
 using namespace std;
 
 void TestAll() {
-    BigInt A = FromHex( "9f3c8a71d4b29e6c8b5fa31d27c4e9a6" );
-
+    BigInt A = FromHex("9f3c8a71d4b29e6c8b5fa31d27c4e9a6");
     BigInt B = FromHex("7d1a9e8f63b0c4d52a79f8e6b3d2c1a0");
+    BigInt N = FromHex("e95e4a5f737059dc60dfc7ad95b3d813");
 
-    BigInt C, Q, R;
+    BigInt C, Q, R, G, L;
     BigInt diff;   
     BigInt sq;
+    BigInt u;
+    ComputeMu(N, u);
 
     cout << "A = " << ToHex(A) << endl;
     cout << "B = " << ToHex(B) << endl;
@@ -41,13 +43,35 @@ void TestAll() {
     LongPower(A, two, sq);
     cout << "A^2 = " << ToHex(sq) << "\n";
 
+    LongGCD(A, B, G);
+    cout << "gcd(A,B) = " << ToHex(G) << "\n";
+
+    LongLCM(A, B, L);
+    cout << "lcm(A,B) = " << ToHex(L) << "\n";
+
+    LongAddMod(A, B, N, C);
+    cout << "(A + B) mod N = " << ToHex(C) << "\n";
+
+    LongSubMod(A, B, N, C);
+    cout << "(A - B) mod N = " << ToHex(C) << "\n";
+
+    LongSubMod(B, A, N, C);
+    cout << "(B - A) mod N = " << ToHex(C) << "\n";
+
+    LongMulMod(A, B, N, u, C);
+    cout << "A * B mod N = " << ToHex(C) << "\n";
+
+    LongSqrMod(A, N, u, C);
+    cout << "A^2 mod N = " << ToHex(C) << "\n";
+
+
 }
 
 void BenchmarkAll() {
     const int iter = 1000;
 
-    BigInt A = FromHex("123456789ABCDEF");
-    BigInt B = FromHex("FEDCBA987654321");
+    BigInt A = FromHex("9f3c8a71d4b29e6c8b5fa31d27c4e9a6");
+    BigInt B = FromHex("7d1a9e8f63b0c4d52a79f8e6b3d2c1a0");
     BigInt C, Q, R;
 
     using clock = chrono::high_resolution_clock;

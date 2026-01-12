@@ -33,5 +33,18 @@ void LongDivMod(const BigInt& A, const BigInt& B, BigInt& Q, BigInt& R);
 
 void LongPower(const BigInt& A, const BigInt& B, BigInt& C);
 
+void LongGCD(BigInt A, BigInt B, BigInt& G);
+void LongLCM(const BigInt& A, const BigInt& B, BigInt& L);
+
+void KillLastDigits(BigInt& A, int t);
+void BarrettReduction(const BigInt& x, const BigInt& n, const BigInt& u, BigInt& r);
+void ComputeMu(const BigInt& N, BigInt& u);
+
+void LongAddMod(const BigInt& A, const BigInt& B, const BigInt& N, BigInt& C);
+void LongSubMod(const BigInt& A, const BigInt& B, const BigInt& N, BigInt& C);
+void LongMulMod(const BigInt& A, const BigInt& B, const BigInt& N, const BigInt& u, BigInt& C);
+void LongSqrMod(const BigInt& A, const BigInt& N, const BigInt& u, BigInt& C);
+
+
 BigInt FromHex(const string& s);
 string ToHex(const BigInt& X);

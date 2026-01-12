@@ -113,6 +113,121 @@ void LongDivMod(const BigInt& A, const BigInt& B, BigInt& Q, BigInt& R) {
     }
 }
 
+void LongGCD(BigInt A, BigInt B, BigInt& G) {
+    BigInt Q, R;
+
+    while (!(B.a[0] == 0 && memcmp(B.a, BigInt().a, sizeof(B.a)) == 0)) {
+        LongDivMod(A, B, Q, R);
+        A = B;
+        B = R;
+    }
+    G = A;
+}
+
+
+void LongLCM(const BigInt& A, const BigInt& B, BigInt& L) {
+    BigInt G, T, Q, R;
+
+    LongGCD(A, B, G);   
+    LongMul(A, B, T);    
+    LongDivMod(T, G, Q, R); 
+
+    L = Q;
+}
+
+void KillLastDigits(BigInt& A, int t) {
+    if (t <= 0) return;
+    if (t >= N) {
+        memset(A.a, 0, sizeof(A.a));
+        return;
+    }
+
+    for (int i = 0; i < N - t; i++)
+        A.a[i] = A.a[i + t];
+
+    for (int i = N - t; i < N; i++)
+        A.a[i] = 0;
+}
+
+void ComputeMu(const BigInt& N, BigInt& u) {
+    BigInt one(1);
+    u = one;
+
+    int k = BitLength(N) / 32 + 1;
+    LongShiftDigitsToHigh(u, 2 * k);   
+
+    BigInt q, r;
+    LongDivMod(u, N, q, r);
+    u = q;                          
+}
+
+
+void BarrettReduction(const BigInt& x, const BigInt& n, const BigInt& u, BigInt& r) {
+    BigInt q = x;
+    int k = BitLength(n) / 32 + 1;
+
+    KillLastDigits(q, k - 1);
+
+    BigInt tmp;
+    LongMul(q, u, tmp);
+    q = tmp;
+
+    KillLastDigits(q, k + 1);
+
+    LongMul(q, n, tmp);
+    LongSub(x, tmp, r);
+
+    while (LongCmp(r, n) >= 0)
+        LongSub(r, n, r);
+}
+
+void LongAddMod(const BigInt& A, const BigInt& B, const BigInt& N, BigInt& C) {
+    BigInt S;
+    LongAdd(A, B, S);         
+
+    if (LongCmp(S, N) >= 0)    
+        LongSub(S, N, C);     
+    else
+        C = S;
+}
+
+
+void LongSubMod(const BigInt& A, const BigInt& B, const BigInt& N, BigInt& C) {
+    if (LongCmp(A, B) >= 0)
+    {
+        LongSub(A, B, C);     
+    }
+    else
+    {
+        BigInt t;
+        LongSub(B, A, t);      
+        LongSub(N, t, C);      
+    }
+}
+
+
+void LongMulMod(const BigInt& A,
+    const BigInt& B,
+    const BigInt& N,
+    const BigInt& u,
+    BigInt& C)
+{
+    BigInt P;
+    LongMul(A, B, P);               
+    BarrettReduction(P, N, u, C);   
+}
+
+void LongSqrMod(const BigInt& A,
+    const BigInt& N,
+    const BigInt& u,
+    BigInt& C)
+{
+    BigInt S;
+    LongMul(A, A, S);             
+    BarrettReduction(S, N, u, C);  
+}
+
+
 
 void LongPower(const BigInt& A, const BigInt& B, BigInt& C) {
     BigInt base = A;
