@@ -227,6 +227,28 @@ void LongSqrMod(const BigInt& A,
     BarrettReduction(S, N, u, C);  
 }
 
+void LongModPowerBarrett(const BigInt& A, const BigInt& B, const BigInt& N, BigInt& C) {
+    BigInt u;
+    ComputeMu(N, u);          
+
+    BigInt base = A;
+    C = BigInt(1);
+
+    int m = BitLength(B);
+
+    for (int i = 0; i < m; i++) {
+        if ((B.a[i / 32] >> (i % 32)) & 1) {
+            BigInt t;
+            LongMul(base, C, t);
+            BarrettReduction(t, N, u, C);
+        }
+
+        BigInt sq;
+        LongMul(base, base, sq);
+        BarrettReduction(sq, N, u, base);
+    }
+}
+
 
 
 void LongPower(const BigInt& A, const BigInt& B, BigInt& C) {
