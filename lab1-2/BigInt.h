@@ -44,6 +44,7 @@ void LongAddMod(const BigInt& A, const BigInt& B, const BigInt& N, BigInt& C);
 void LongSubMod(const BigInt& A, const BigInt& B, const BigInt& N, BigInt& C);
 void LongMulMod(const BigInt& A, const BigInt& B, const BigInt& N, const BigInt& u, BigInt& C);
 void LongSqrMod(const BigInt& A, const BigInt& N, const BigInt& u, BigInt& C);
+void LongModPowerBarrett(const BigInt& A, const BigInt& B, const BigInt& N, BigInt& C);
 
 
 BigInt FromHex(const string& s);
