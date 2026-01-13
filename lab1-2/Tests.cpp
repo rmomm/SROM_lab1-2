@@ -1,6 +1,8 @@
 #include "BigInt.h"
 #include <iostream>
 #include <chrono>
+#include <iomanip>
+
 
 using namespace std;
 
@@ -64,6 +66,8 @@ void TestAll() {
     LongSqrMod(A, N, u, C);
     cout << "A^2 mod N = " << ToHex(C) << "\n";
 
+    LongModPowerBarrett(A, B, N, C);
+    cout << "A^B mod N = " << ToHex(C) << "\n";
 
 }
 
@@ -72,7 +76,11 @@ void BenchmarkAll() {
 
     BigInt A = FromHex("9f3c8a71d4b29e6c8b5fa31d27c4e9a6");
     BigInt B = FromHex("7d1a9e8f63b0c4d52a79f8e6b3d2c1a0");
-    BigInt C, Q, R;
+    BigInt N = FromHex("e95e4a5f737059dc60dfc7ad95b3d813");
+
+    BigInt C, Q, R, mu;
+
+    ComputeMu(N, mu);
 
     using clock = chrono::high_resolution_clock;
 
@@ -84,19 +92,29 @@ void BenchmarkAll() {
         long long avg =
             chrono::duration_cast<chrono::nanoseconds>(t2 - t1).count() / iter;
 
-        cout << name << ": " << avg << " nanoseconds" << endl;
+        cout << setw(15) << left << name
+            << avg << " ns" << endl;
         };
 
     cout << "\nAverage time per operation:\n";
+    cout << "------------------------------------\n";
 
     bench("add", [&]() { LongAdd(A, B, C); });
     bench("sub", [&]() { LongSub(A, B, C); });
     bench("mul", [&]() { LongMul(A, B, C); });
     bench("div", [&]() { LongDivMod(A, B, Q, R); });
 
-    BigInt e(2);
-    bench("pow", [&]() { LongPower(A, e, C); });
+    bench("add mod", [&]() { LongAddMod(A, B, N, C); });
+    bench("sub mod", [&]() { LongSubMod(A, B, N, C); });
+    bench("mul mod", [&]() { LongMulMod(A, B, N, mu, C); });
+    bench("square mod", [&]() { LongSqrMod(A, N, mu, C); });
+
+    BigInt E = FromHex("0102030405");
+    bench("mod power", [&]() {
+        LongModPowerBarrett(A, E, N, C);
+        });
 }
+
 
 
 
