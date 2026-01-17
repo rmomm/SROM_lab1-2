@@ -6,7 +6,7 @@
 
 using namespace std;
 
-static const int N = 64;
+static const int N = 128;
 static const uint64_t BASE = (1ULL << 32);
 
 struct BigInt {
@@ -29,6 +29,7 @@ void LongMul(const BigInt& A, const BigInt& B, BigInt& C);
 
 int  BitLength(const BigInt& A);
 void ShiftLeftBits(BigInt& A, int k);
+bool IsZero(const BigInt& A);
 void LongDivMod(const BigInt& A, const BigInt& B, BigInt& Q, BigInt& R);
 
 void LongPower(const BigInt& A, const BigInt& B, BigInt& C);

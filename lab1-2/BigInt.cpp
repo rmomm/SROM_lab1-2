@@ -60,15 +60,17 @@ void LongMul(const BigInt& A, const BigInt& B, BigInt& C) {
     memset(C.a, 0, sizeof(C.a));
 
     for (int i = 0; i < N; i++) {
-        BigInt temp;
-        LongMulOneDigit(A, B.a[i], temp);
-        LongShiftDigitsToHigh(temp, i);
+        uint64_t carry = 0;
+        for (int j = 0; j + i < N; j++) {
+            uint64_t t = (uint64_t)A.a[j] * B.a[i] + C.a[i + j] + carry;
+            C.a[i + j] = (uint32_t)(t & 0xFFFFFFFF);
+            carry = t >> 32;
+        }
 
-        BigInt sum;
-        LongAdd(C, temp, sum);
-        C = sum;
+        if (i + N < N) C.a[i + N] += (uint32_t)carry;
     }
 }
+
 
 
 int BitLength(const BigInt& A) {
@@ -94,35 +96,49 @@ void ShiftLeftBits(BigInt& A, int k) {
     }
 }
 
+bool IsZero(const BigInt& A) {
+    for (int i = 0; i < N; i++)
+        if (A.a[i] != 0) return false;
+    return true;
+}
+
 
 void LongDivMod(const BigInt& A, const BigInt& B, BigInt& Q, BigInt& R) {
     memset(Q.a, 0, sizeof(Q.a));
-    int k = BitLength(B);
-    R = A;
-    while (LongCmp(R, B) >= 0) {
-        int t = BitLength(R);
-        BigInt C = B;
-        ShiftLeftBits(C, t - k);
-        if (LongCmp(R, C) < 0) {
-            t--;
-            C = B;
-            ShiftLeftBits(C, t - k);
+    R = BigInt(0);
+
+    if (IsZero(B)) {
+        return;
+    }
+
+    int n = BitLength(A);
+
+    for (int i = n - 1; i >= 0; i--) {
+    
+        ShiftLeftBits(R, 1);
+
+        
+        if ((A.a[i / 32] >> (i % 32)) & 1)
+            R.a[0] |= 1;
+
+        if (LongCmp(R, B) >= 0) {
+            LongSub(R, B, R);
+            Q.a[i / 32] |= (1u << (i % 32));
         }
-        LongSub(R, C, R);
-        Q.a[(t - k) / 32] |= (1u << ((t - k) % 32));
     }
 }
 
+
 void LongGCD(BigInt A, BigInt B, BigInt& G) {
     BigInt Q, R;
-
-    while (!(B.a[0] == 0 && memcmp(B.a, BigInt().a, sizeof(B.a)) == 0)) {
+    while (!IsZero(B)) {
         LongDivMod(A, B, Q, R);
         A = B;
         B = R;
     }
     G = A;
 }
+
 
 
 void LongLCM(const BigInt& A, const BigInt& B, BigInt& L) {
@@ -149,79 +165,84 @@ void KillLastDigits(BigInt& A, int t) {
         A.a[i] = 0;
 }
 
-void ComputeMu(const BigInt& N, BigInt& u) {
-    BigInt one(1);
-    u = one;
 
-    int k = BitLength(N) / 32 + 1;
-    LongShiftDigitsToHigh(u, 2 * k);   
+int NumDigits(const BigInt& A) {
+    for (int i = N - 1; i >= 0; i--)
+        if (A.a[i] != 0)
+            return i + 1;
+    return 1;
+}
+
+
+void ComputeMu(const BigInt& N, BigInt& u) {
+    int k = NumDigits(N);
+
+    BigInt beta2k(1);
+    LongShiftDigitsToHigh(beta2k, 2 * k);
 
     BigInt q, r;
-    LongDivMod(u, N, q, r);
-    u = q;                          
+    LongDivMod(beta2k, N, q, r);
+    u = q;
 }
+
 
 
 void BarrettReduction(const BigInt& x, const BigInt& n, const BigInt& u, BigInt& r) {
-    BigInt q = x;
-    int k = BitLength(n) / 32 + 1;
+    int k = NumDigits(n);
 
-    KillLastDigits(q, k - 1);
+    BigInt q1 = x;
+    KillLastDigits(q1, k - 1);
+
+    BigInt q2;
+    LongMul(q1, u, q2);
+
+    BigInt q3 = q2;
+    KillLastDigits(q3, k + 1);
 
     BigInt tmp;
-    LongMul(q, u, tmp);
-    q = tmp;
+    LongMul(q3, n, tmp);
+    LongSub(x, tmp, r); 
 
-    KillLastDigits(q, k + 1);
-
-    LongMul(q, n, tmp);
-    LongSub(x, tmp, r);
-
-    while (LongCmp(r, n) >= 0)
+    while (LongCmp(r, n) >= 0) {
         LongSub(r, n, r);
+    }
 }
 
 void LongAddMod(const BigInt& A, const BigInt& B, const BigInt& N, BigInt& C) {
-    BigInt S;
-    LongAdd(A, B, S);         
+    BigInt A1 = A, B1 = B;
 
-    if (LongCmp(S, N) >= 0)    
-        LongSub(S, N, C);     
-    else
-        C = S;
+    while (LongCmp(A1, N) >= 0) LongSub(A1, N, A1);
+    while (LongCmp(B1, N) >= 0) LongSub(B1, N, B1);
+
+    LongAdd(A1, B1, C);
+    while (LongCmp(C, N) >= 0)
+        LongSub(C, N, C);
 }
 
 
 void LongSubMod(const BigInt& A, const BigInt& B, const BigInt& N, BigInt& C) {
-    if (LongCmp(A, B) >= 0)
-    {
-        LongSub(A, B, C);     
-    }
-    else
-    {
+    BigInt A1 = A, B1 = B;
+
+    if (LongCmp(A1, N) >= 0) LongSub(A1, N, A1);
+    if (LongCmp(B1, N) >= 0) LongSub(B1, N, B1);
+
+    if (LongCmp(A1, B1) >= 0)
+        LongSub(A1, B1, C);
+    else {
         BigInt t;
-        LongSub(B, A, t);      
-        LongSub(N, t, C);      
+        LongSub(B1, A1, t);
+        LongSub(N, t, C);
     }
 }
 
 
-void LongMulMod(const BigInt& A,
-    const BigInt& B,
-    const BigInt& N,
-    const BigInt& u,
-    BigInt& C)
-{
+void LongMulMod(const BigInt& A, const BigInt& B, const BigInt& N, const BigInt& u, BigInt& C) {
     BigInt P;
-    LongMul(A, B, P);               
-    BarrettReduction(P, N, u, C);   
+    LongMul(A, B, P);      
+    BarrettReduction(P, N, u, C); 
 }
 
-void LongSqrMod(const BigInt& A,
-    const BigInt& N,
-    const BigInt& u,
-    BigInt& C)
-{
+void LongSqrMod(const BigInt& A, const BigInt& N, const BigInt& u, BigInt& C){
     BigInt S;
     LongMul(A, A, S);             
     BarrettReduction(S, N, u, C);  
@@ -231,7 +252,8 @@ void LongModPowerBarrett(const BigInt& A, const BigInt& B, const BigInt& N, BigI
     BigInt u;
     ComputeMu(N, u);          
 
-    BigInt base = A;
+    BigInt base;
+    BarrettReduction(A, N, u, base);
     C = BigInt(1);
 
     int m = BitLength(B);
@@ -239,13 +261,15 @@ void LongModPowerBarrett(const BigInt& A, const BigInt& B, const BigInt& N, BigI
     for (int i = 0; i < m; i++) {
         if ((B.a[i / 32] >> (i % 32)) & 1) {
             BigInt t;
-            LongMul(base, C, t);
+            LongMul(C, base, t);
             BarrettReduction(t, N, u, C);
         }
 
-        BigInt sq;
-        LongMul(base, base, sq);
-        BarrettReduction(sq, N, u, base);
+        if (i < m - 1) {
+            BigInt sq;
+            LongMul(base, base, sq);
+            BarrettReduction(sq, N, u, base);
+        }
     }
 }
 
