@@ -17,9 +17,9 @@ void TestAll() {
     BigInt u;
     ComputeMu(N, u);
 
-    cout << "A = " << ToHex(A) << endl;
-    cout << "B = " << ToHex(B) << endl;
-
+    cout << "A = " << ToHex(A) << "\n";
+    cout << "B = " << ToHex(B) << "\n";
+    cout << "N = " << ToHex(A) << "\n";
 
     LongAdd(A, B, C);
     cout << "A + B = " << ToHex(C) << "\n";
@@ -44,6 +44,24 @@ void TestAll() {
     BigInt two(2);
     LongPower(A, two, sq);
     cout << "A^2 = " << ToHex(sq) << "\n";
+
+    BigInt l, r;
+    BigInt t1, t2, sum;
+
+    LongAddMod(A, B, N, sum);
+    LongMulMod(sum, A, N, u, l);
+
+    LongMulMod(A, A, N, u, t1);
+    LongMulMod(B, A, N, u, t2);
+    LongAddMod(t1, t2, N, r);
+
+    cout << "(A + B) * A mod N = " << ToHex(l) << "\n";
+    cout << "A*A + B*A mod N = " << ToHex(r) << "\n";
+
+    if (LongCmp(l, r) == 0)
+        cout << "Distributivity test: OK\n";
+    else
+        cout << "Distributivity test: ERROR\n";
 
     LongGCD(A, B, G);
     cout << "gcd(A,B) = " << ToHex(G) << "\n";
